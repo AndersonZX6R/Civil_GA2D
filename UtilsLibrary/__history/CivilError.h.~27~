@@ -1,0 +1,86 @@
+/***
+ * Error.h
+ *
+ * Copyright(c) 2013 - Eng.º Anderson Marques Ribeiro.
+ *
+ * 06 de Janeiro de 2013.
+ */
+
+#ifndef __CIVIL_ERROR
+#define __CIVIL_ERROR
+
+#include <string>
+
+using namespace std;
+
+namespace Civil
+{
+
+namespace UTILS
+{
+
+#define DECLARE_ERROR_CODE( name ) \
+	const Civil::UTILS::ErrorCodeType name = Civil::UTILS::LAST_ERROR_CODE++
+
+#define BEGIN_DECLARE_ERROR( name ) \
+class name : public Civil::UTILS::Error \
+{ \
+public: \
+	name (Civil::UTILS::ErrorCodeType ec) : Civil::UTILS::Error(ec) \
+	{} \
+protected: \
+	const char *getErrorMessage(Civil::UTILS::ErrorCodeType ec) const \
+	{
+
+#define DECLARE_ERROR( name, message ) \
+		if (name == getError()) return message;
+
+#define END_DECLARE_ERROR \
+		return UTILS::Error::getErrorMessage(ec); \
+	} \
+}
+
+#define RAISE( errorName, errorCode ) throw errorName( errorCode )
+
+typedef long ErrorCodeType;
+
+class Error
+{
+public:
+
+	Error(ErrorCodeType err) :
+		m_ec(err)
+	{};
+
+private:
+
+	ErrorCodeType
+		m_ec;
+
+protected:
+
+    virtual const char *getErrorMessage(ErrorCodeType ec) const
+    {
+        return "Unknown error";
+    };
+
+public:
+
+    ErrorCodeType getError() const
+	{
+        return m_ec;
+    };
+    const char *getMessage() const
+    {
+        return getErrorMessage(getError());
+    };
+
+}; // Error
+
+extern ErrorCodeType LAST_ERROR_CODE;
+
+} // namespace UTILS
+
+} // namespace Civil
+
+#endif // ifndef __CIVIL_ERROR

@@ -1,0 +1,31 @@
+#pragma hdrstop
+
+#include "Civil_Math.h"
+#pragma package(smart_init)
+
+#include <math.h>
+
+using namespace std;
+
+namespace Civil
+{
+
+namespace MATH
+{
+
+void
+Angle::calcRadians()
+{
+	m_dblRadians = m_degrees + (m_minutes / 60) + (m_seconds / 3600);
+	m_dblRadians = M_PI * (m_dblRadians / 180);
+}
+
+void
+Angle::calcDegrees()
+{
+
+}
+
+} // namespace MATH
+
+} // namespace Civil

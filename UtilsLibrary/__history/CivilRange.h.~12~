@@ -1,0 +1,58 @@
+#ifndef __CIVIL_RANGE
+#define __CIVIL_RANGE
+
+//#include "CivilError.h"
+
+namespace Civil
+{
+
+namespace UTILS
+{
+
+/*DECLARE_ERROR_CODE(reRangeError);
+
+BEGIN_DECLARE_ERROR(ERange)
+	DECLARE_ERROR(reRangeError, "Invalid range value")
+END_DECLARE_ERROR;*/
+
+	template<int _min, int _max>
+	struct Range
+	{
+	public:
+
+		Range(int value = 0) :
+			m_value(value)
+		{}
+		Range(const Range &range) :
+			m_value(range.m_value)
+        {}
+
+	private:
+
+		int m_value;
+
+	public:
+
+		static const int
+			min = _min,
+			max = _max;
+
+		operator int()
+		{
+			return m_value;
+		}
+		void operator=(int value)
+		{
+			/*if (value > _max || value < _min)
+				RAISE(ERange, reRangeError);*/
+
+			m_value = value;
+        }
+
+	}; /* Range */
+
+} // namespace RANGE
+
+} // namespace Civil
+
+#endif // ifndef __CIVIL_RANGE

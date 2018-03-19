@@ -1,0 +1,47 @@
+#ifndef Civil_Math
+#define Civil_Math
+
+#include "..\UtilsLibrary\CivilError.h"
+#include "..\UtilsLibrary\CivilRange.h"
+
+using namespace Civil::UTILS;
+
+namespace Civil
+{
+
+namespace MATH
+{
+
+	typedef Civil::UTILS::Range<0, 59> MinutesType, SecondsType;
+
+	struct Angle
+	{
+	public:
+
+		Angle() :
+			m_dblRadians(0)
+        {}
+
+	private:
+
+		double
+			m_dblRadians;
+
+	public:
+
+		void operator=(double value)
+		{
+            m_dblRadians = value;
+		}
+		operator double()
+		{
+            return m_dblRadians;
+        }
+
+	}; /* Angle */
+
+} /* namespace Math */
+
+} /* namespace Civil */
+
+#endif

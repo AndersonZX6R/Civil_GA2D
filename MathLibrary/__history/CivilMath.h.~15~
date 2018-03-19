@@ -1,0 +1,92 @@
+#ifndef Civil_Math
+#define Civil_Math
+
+#include "..\UtilsLibrary\CivilError.h"
+#include "..\UtilsLibrary\CivilRange.h"
+
+using namespace Civil::UTILS;
+
+namespace Civil
+{
+
+namespace MATH
+{
+
+	typedef Range<short int, 0, 360> DegreesType;
+	typedef Range<short int, 0, 59> MinutesType, SecondsType;
+
+	struct Angle
+	{
+	public:
+
+		Angle() :
+			m_dblRadians(0),
+			m_degrees(0),
+			m_minutes(0),
+			m_seconds(0)
+        {}
+
+	private:
+
+		double
+			m_dblRadians;
+		DegreesType
+			m_degrees;
+		MinutesType
+			m_minutes;
+		SecondsType
+			m_seconds;
+
+		void calcRadians();
+		void calcDegrees();
+
+	public:
+
+		DegreesType getDegrees() const
+		{
+            return m_degrees;
+		}
+		void setDegrees(const DegreesType &value)
+		{
+			m_degrees = value;
+			calcRadians();
+		}
+		MinutesType getMinutes() const
+		{
+			return m_minutes;
+		}
+		void setMinutes(const MinutesType &value)
+		{
+			m_minutes = value;
+			calcRadians();
+		}
+		SecondsType getSeconds() const
+		{
+			return m_seconds;
+		}
+		void setSeconds(const SecondsType &value)
+		{
+			m_seconds = value;
+            calcRadians();
+        }
+
+		void operator=(double value)
+		{
+			m_dblRadians = value;
+            calcDegrees();
+		}
+		operator double()
+		{
+            return m_dblRadians;
+		}
+
+	}; /* Angle */
+
+	static const struct Angle
+		ANGLE_90 = { .m_dblRadians = M_PI / 2 };
+
+} /* namespace Math */
+
+} /* namespace Civil */
+
+#endif

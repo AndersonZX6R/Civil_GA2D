@@ -1,0 +1,54 @@
+#include "Civil_Math.h"
+
+#include <math.h>
+//#include <cmath>
+
+namespace Civil
+{
+
+namespace MATH
+{
+
+void
+Angle::calcRadians()
+{
+	m_dblRadians = m_degrees + (m_minutes / 60) + (m_seconds / 3600);
+	m_dblRadians = M_PI * (m_dblRadians / 180);
+}
+
+void
+Angle::calcDegrees()
+{
+	double
+		dblDecimal = m_dblRadians;
+
+	if (dblDecimal < 0)
+		dblDecimal = M_PI - dblDecimal;
+
+	dblDecimal = (dblDecimal / M_PI) * 180;
+
+	double
+		dblBff = dblDecimal / 360;
+
+	if (dblBff > 1)
+	{
+		float
+			dblInteiro,
+			dblFracao;
+
+		dblFracao = modf(dblBff, &dblInteiro);
+		dblDecimal = (dblDecimal - dblInteiro * 360) * dblFracao;
+	}
+
+	double
+		dblMinute;
+
+	m_degrees = (int) floor(dblDecimal);
+	dblMinute = (dblDecimal - m_degrees) * 60;
+	m_minutes = (int) floor(dblMinute);
+	m_seconds = (int) floor((dblMinute - m_minutes) * 60);
+}
+
+} // namespace MATH
+
+} // namespace Civil
