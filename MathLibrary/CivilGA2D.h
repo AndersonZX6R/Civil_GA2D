@@ -332,6 +332,19 @@ namespace CIVIL::MATH::GA2D
 
 	}; /* Point2D */
 
+	enum SideEnum
+	{
+		sLeft = 1,
+		sOver = 0,
+		sRight = -1
+	};
+
+	template <typename NumType> inline constexpr
+	int sign(NumType num)
+	{
+		return (NumType(0) < num) - (num < NumType(0));
+	}
+
 	struct Vector2D
 	{
 	public:
@@ -341,6 +354,10 @@ namespace CIVIL::MATH::GA2D
 			y1(_y1),
 			x2(_x2),
 			y2(_y2)
+		{}
+		Vector2D(const Point2D &_pnt1, const Point2D &_pnt2) :
+			pnt1(_pnt1),
+			pnt2(_pnt2)
 		{}
 
 		union
@@ -384,6 +401,11 @@ namespace CIVIL::MATH::GA2D
 			return (pnt2 + pnt1) / 2;
 		}
 
+		SideEnum side(const Point2D &pnt) const
+		{
+			return (SideEnum) sign((pnt2 - pnt1).vectorProduct(pnt - pnt1));
+		}
+
 		void moveTo(const Point2D &pnt)
 		{
 			Point2D
@@ -397,6 +419,21 @@ namespace CIVIL::MATH::GA2D
 				p(x - pnt1.x, y - pnt1.y);
 
 			*this = transform(Matrix2D::translation(p.x, p.y));
+		}
+
+		friend Vector2D operator+(const Vector2D &vtr1, const Vector2D &vtr2)
+		{
+			Vector2D
+				v = vtr2;
+
+			v.moveTo(vtr1.pnt2);
+
+			return Vector2D(vtr1.pnt1, v.pnt2);
+		}
+
+		friend Vector2D operator-(const Vector2D &vtr1, const Vector2D &vtr2)
+		{
+			return Vector2D(vtr2.pnt2, vtr1.pnt2);
 		}
 
 	}; /* Vector2D */
