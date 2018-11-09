@@ -31,9 +31,7 @@
 
 #include "..\UtilsLibrary\CivilError.h"
 #include "..\UtilsLibrary\CivilRange.h"
-#ifdef MATRIX_DYNAMIC
 #include "..\UtilsLibrary\CivilDynArray.h"
-#endif // ifdef MATRIX_DYNAMIC
 
 using namespace CIVIL::UTILS;
 
@@ -43,7 +41,6 @@ namespace CIVIL::MATH::GA2D
 #define MAX_ROWS 20
 #define MAX_COLS 20
 
-	DECLARE_ERROR_CODE(meOverflow);
 	DECLARE_ERROR_CODE(meInvalidIndex);
 	DECLARE_ERROR_CODE(meCantRemoveDim);
 	DECLARE_ERROR_CODE(meInvertible);
@@ -51,7 +48,6 @@ namespace CIVIL::MATH::GA2D
 	DECLARE_ERROR_CODE(meIncompatible);
 
 	BEGIN_DECLARE_ERROR(EMatrix)
-		DECLARE_ERROR(meOverflow, "The matrix does not contain the specified size")
 		DECLARE_ERROR(meInvalidIndex, "Invalid index")
 		DECLARE_ERROR(meCantRemoveDim, "Row/colunm can not be removed")
 		DECLARE_ERROR(meInvertible, "impossible to calculate the inverse matrix")
@@ -59,120 +55,59 @@ namespace CIVIL::MATH::GA2D
 		DECLARE_ERROR(meIncompatible, "Matrices incompatible for operation")
 	END_DECLARE_ERROR;
 
-#ifdef MATRIX_DYNAMIC
 	template<typename _type = double>
-#else
-	template<typename _type = double, int _rows = MAX_ROWS, int _cols = MAX_COLS>
-#endif // ifdef MATRIX_DYNAMIC
 	struct Matrix
 	{
 	public:
 
-#ifndef MATRIX_DYNAMIC
-		typedef Range<short int, 0, _rows - 1> RowRangeType;
-		typedef Range<short int, 0, _cols - 1> ColRangeType;
-		typedef Range<short int, 1, _rows> RowSizeType;
-		typedef Range<short int, 1, _cols> ColSizeType;
-#else
 		typedef Range<short int, 0, SHRT_MAX - 1> RowRangeType, ColRangeType;
 		typedef Range<short int, 1, SHRT_MAX> RowSizeType, ColSizeType;
-#endif // ifndef MATRIX_DYNAMIC
 
 		Matrix()
-#ifdef MATRIX_DYNAMIC
 			: m_aItems(0, 0)
-#endif // ifdef MATRIX_DYNAMIC
 		{}
 		Matrix(const RowSizeType &rows, const ColSizeType &cols)
-#ifndef MATRIX_DYNAMIC
-			: m_intRowsCount(rows), m_intColsCount(cols)
-#else
-			: m_aItems( DynArray<_type>(rows, cols) )
-#endif
+			: m_aItems(DynArray<_type>(rows, cols))
 		{}
 		Matrix(const Matrix &mat)
 		{
 			*this = mat;
 		}
-#ifndef MATRIX_DYNAMIC
 		Matrix(_type *values, const RowSizeType &rows, const ColSizeType &cols) :
-			m_intRowsCount(rows), m_intColsCount(cols)
+			m_aItems(DynArray<_type>(rows, cols))
 		{
-			memcpy(&m_aItems, values, (rows + cols) * sizeof(_type));
+			for (int i = 0; i < rows; i++)
+				for (int j = 0; j < cols; j++)
+					m_aItems.setItem(i, j, values[i * cols + j]);
 		}
-#endif // ifndef MATRIX_DYNAMIC
 
 	private:
 
-#ifndef MATRIX_DYNAMIC
-		_type
-			m_aItems[_rows][_cols];
-		int
-			m_intRowsCount = 0,
-			m_intColsCount = 0;
-#else
 		DynArray<_type>
 			m_aItems;
-#endif // MATRIX_DYNAMIC
 
 	public:
 
-#ifndef MATRIX_DYNAMIC
-		static const int
-			maxRows = _rows,
-			maxCols = _cols;
-#endif // ifndef MATRIX_DYNAMIC
-
 		RowSizeType getRowCount() const
 		{
-#ifndef MATRIX_DYNAMIC
-			return m_intRowsCount;
-#else
 			return m_aItems.getRowCount();
-#endif // ifndef MATRIX_DYNAMIC
 		}
 		ColSizeType getColCount() const
 		{
-#ifndef MATRIX_DYNAMIC
-			return m_intColsCount;
-#else
 			return m_aItems.getColCount();
-#endif // ifndef MATRIX_DYNAMIC
 		}
 		void setDims(const RowSizeType &rows, const ColSizeType &cols)
 		{
-#ifndef MATRIX_DYNAMIC
-			if (rows > _rows || cols > _cols)
-				RAISE(EMatrix, meOverflow);
-
-			m_intRowsCount = rows;
-			m_intColsCount = cols;
-#else
 			m_aItems.setDims(rows, cols);
-#endif // ifndef MATRIX_DYNAMIC
 		}
 
 		_type getItem(const RowRangeType &row, const ColRangeType &col) const
 		{
-#ifndef MATRIX_DYNAMIC
-			if (row >= m_intRowsCount || col >= m_intColsCount)
-				RAISE(EMatrix, meInvalidIndex);
-
-			return m_aItems[row][col];
-#else
 			return m_aItems.getItem(row, col);
-#endif // ifndef MATRIX_DYNAMIC
 		}
 		void setItem(const RowRangeType &row, const ColRangeType &col, _type value)
 		{
-#ifndef MATRIX_DYNAMIC
-			if (row >= m_intRowsCount || col >= m_intColsCount)
-				RAISE(EMatrix, meInvalidIndex);
-
-			m_aItems[row][col] = value;
-#else
 			m_aItems.setItem(row, col, value);
-#endif // ifndef MATRIX_DYNAMIC
 		}
 
 		void removeRow(const RowRangeType &row)
@@ -183,19 +118,11 @@ namespace CIVIL::MATH::GA2D
 			if (getRowCount() == 1)
 				RAISE(EMatrix, meCantRemoveDim);
 
-#ifndef MATRIX_DYNAMIC
-			for (int i = row ; i < m_intRowsCount - 1; i++)
-				for (int j = 0; j < m_intColsCount; j++)
-					m_aItems[i][j] = m_aItems[i + 1][j];
-
-			m_intRowsCount--;
-#else
 			for (int i = row; i < m_aItems.getRowCount() - 1; i++)
 				for (int j = 0; j < m_aItems.getColCount(); j++)
 					m_aItems.setItem(i, j, m_aItems.getItem(i + 1, j));
 
 			m_aItems.setDims(m_aItems.getRowCount() - 1, m_aItems.getColCount());
-#endif // ifndef MATRIX_DYNAMIC
 		}
 		void removeCol(const ColRangeType &col)
 		{
@@ -205,17 +132,10 @@ namespace CIVIL::MATH::GA2D
 			if (getColCount() == 1)
 				RAISE(EMatrix, meCantRemoveDim);
 
-#ifndef MATRIX_DYNAMIC
-			for (int i = 0; i < m_intRowsCount; i++)
-				for (int j = col; j < m_intColsCount - 1; j++)
-					m_aItems[i][j] = m_aItems[i][j + 1];
-			m_intColsCount--;
-#else
 			for (int i = 0; i < m_aItems.getRowCount(); i++)
 				for (int j = col; j < m_aItems.getColCount() - 1; j++)
 					m_aItems.setItem(i, j, m_aItems.getItem(i, j + 1));
 			m_aItems.setDims(m_aItems.getRowCount(), m_aItems.getColCount() - 1);
-#endif // ifndef MATRIX_DYNAMIC
 		}
 
 		static Matrix null(const RowSizeType &rows, const ColSizeType &cols)
@@ -326,14 +246,7 @@ namespace CIVIL::MATH::GA2D
 
 		Matrix &operator=(const Matrix &mat)
 		{
-#ifndef MATRIX_DYNAMIC
-			m_intRowsCount = mat.m_intRowsCount;
-			m_intColsCount = mat.m_intColsCount;
-
-			memcpy(&m_aItems, &mat.m_aItems, sizeof(_type) * _rows * _cols);
-#else
 			m_aItems = mat.m_aItems;
-#endif // ifndef MATRIX_DYNAMIC
 
 			return *this;
 		}

@@ -36,7 +36,7 @@ const Matrix2D
 	Matrix2D::M_NULL = { {{0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}} };
 
 Matrix2D
-Matrix2D::fromMatrix(const Matrix<double, 3, 3> &mat)
+Matrix2D::fromMatrix(const Matrix<double> &mat)
 {
 	Matrix2D
 		m;

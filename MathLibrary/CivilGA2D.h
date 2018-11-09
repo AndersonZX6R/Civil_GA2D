@@ -35,8 +35,6 @@
 #include "..\UtilsLibrary\CivilRange.h"
 #include "..\UtilsLibrary\CivilError.h"
 #include "..\MathLibrary\CivilAngle.h"
-
-#undef MATRIX_DYNAMIC
 #include "..\MathLibrary\CivilMatrix.h"
 
 using namespace std;
@@ -64,17 +62,17 @@ namespace CIVIL::MATH::GA2D
 
 	private:
 
-		Matrix2D fromMatrix(const Matrix<double, 3, 3> &mat);
+		Matrix2D fromMatrix(const Matrix<double> &mat);
 
 	public:
 
 		bool invertible()
 		{
-			return ((Matrix<double, 3, 3>) *this).invertible();
+			return ((Matrix<double>) *this).invertible();
 		}
 		Matrix2D reverse()
 		{
-			return fromMatrix( ((Matrix<double, 3, 3>) *this).reverse() );
+			return fromMatrix( ((Matrix<double>) *this).reverse() );
 		}
 
 		static Matrix2D translation(double x, double y)
@@ -130,31 +128,17 @@ namespace CIVIL::MATH::GA2D
 			return *this;
 		}
 
-#ifndef MATRIX_DYNAMIC
-		operator Matrix<double, 3, 3>()
-		{
-			Matrix<double, 3, 3>
-				mat(3, 3);
-
-			for (int i = 0; i < 3;)
-				for (int j = 0; j < 3; j++)
-					mat.setItem(i, j, items[i][j]);
-
-			return mat;
-		}
-#else
 		operator Matrix<double>()
 		{
 			Matrix<double>
 				mat(3, 3);
 
-			for (register int i = 0; i < 3; i++)
-				for (register int j = 0; j < 3; j++)
+			for (int i = 0; i < 3; i++)
+				for (int j = 0; j < 3; j++)
 					mat.setItem(i, j, items[i][j]);
 
 			return mat;
 		}
-#endif // ifdef MATRIX_DYNAMIC
 
 		static const Matrix2D
 			M_IDENTITY,
@@ -687,5 +671,7 @@ namespace CIVIL::MATH::GA2D
 	}; /* Circle2D */
 
 } // namespace CIVIL::MATH::GA2D
+
+#undef MATRIX_DYNAMIC_DEFINED
 
 #endif // ifndef __CIVIL_GA2D
