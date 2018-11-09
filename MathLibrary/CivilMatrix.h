@@ -1,5 +1,29 @@
+/***
+ * CivilMatrix.h;
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2018 Eng.º Anderson Marques Ribeiro (anderson.marques.ribeiro@gmail.com).
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 #ifndef __CIVIL_MATRIX
-#define __CIVIL_MATRIX 
+#define __CIVIL_MATRIX
 
 #ifdef _MANAGED
 #pragma unmanaged
@@ -7,6 +31,9 @@
 
 #include "..\UtilsLibrary\CivilError.h"
 #include "..\UtilsLibrary\CivilRange.h"
+#ifdef MATRIX_DYNAMIC
+#include "..\UtilsLibrary\CivilDynArray.h"
+#endif // ifdef MATRIX_DYNAMIC
 
 using namespace CIVIL::UTILS;
 
@@ -64,13 +91,8 @@ namespace CIVIL::MATH::GA2D
 #endif
 		{}
 		Matrix(const Matrix &mat)
-#ifdef MATRIX_DYNAMIC
-			: m_aItems(mat.m_aItems)
-#endif // ifdef MATRIX_DYNAMIC
 		{
-#ifndef MATRIX_DYNAMIC
 			*this = mat;
-#endif // ifndef MATRIX_DYNAMIC
 		}
 #ifndef MATRIX_DYNAMIC
 		Matrix(_type *values, const RowSizeType &rows, const ColSizeType &cols) :
@@ -162,14 +184,14 @@ namespace CIVIL::MATH::GA2D
 				RAISE(EMatrix, meCantRemoveDim);
 
 #ifndef MATRIX_DYNAMIC
-			for (register int i = row ; i < m_intRowsCount - 1; i++)
-				for (register int j = 0; j < m_intColsCount; j++)
+			for (int i = row ; i < m_intRowsCount - 1; i++)
+				for (int j = 0; j < m_intColsCount; j++)
 					m_aItems[i][j] = m_aItems[i + 1][j];
 
 			m_intRowsCount--;
 #else
-			for (register int i = row; i < m_aItems.getRowCount() - 1; i++)
-				for (register int j = 0; j < m_aItems.getColCount(); j++)
+			for (int i = row; i < m_aItems.getRowCount() - 1; i++)
+				for (int j = 0; j < m_aItems.getColCount(); j++)
 					m_aItems.setItem(i, j, m_aItems.getItem(i + 1, j));
 
 			m_aItems.setDims(m_aItems.getRowCount() - 1, m_aItems.getColCount());
@@ -201,8 +223,8 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				mat(rows, cols);
 
-			for (register int i = 0; i < rows; i++)
-				for (register int j = 0; j < cols; j++)
+			for (int i = 0; i < rows; i++)
+				for (int j = 0; j < cols; j++)
 					mat.setItem(i, j, 0);
 
 			return mat;
@@ -212,27 +234,29 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				mat(size, size);
 
-			for (register int i = 0; i < size; i++)
-				for (register int j = 0; j < size; j++)
+			for (int i = 0; i < size; i++)
+				for (int j = 0; j < size; j++)
 					mat.setItem(i, j, i == j ? 1 : 0);
 
 			return mat;
 		}
 
-		Matrix cofats() const
+		bool isSquare() const
 		{
-			register int
-				i, j;
+			return getRowCount() == getColCount();
+		}
 
-			if (getRowCount() != getColCount())
+		Matrix cofats()
+		{
+			if (!isSquare())
 				RAISE(EMatrix, meNotSquare);
 
 			Matrix
 				tmp,
 				res(getRowCount(), getColCount());
 
-			for (register int i = 0; i < getRowCount(); i++)
-				for (register int j = 0; j < getColCount(); j++)
+			for (int i = 0; i < getRowCount(); i++)
+				for (int j = 0; j < getColCount(); j++)
 				{
 					tmp = *this;
 					tmp.removeRow(i);
@@ -244,23 +268,23 @@ namespace CIVIL::MATH::GA2D
 			return res;
 		}
 
-		Matrix transposed() const
+		Matrix transposed()
 		{
 			Matrix
 				res(getColCount(), getRowCount());
 
-			for (register int i = 0; i < getRowCount(); i++)
-				for (register int j = 0; j < getColCount(); j++)
+			for (int i = 0; i < getRowCount(); i++)
+				for (int j = 0; j < getColCount(); j++)
 					res.setItem(j, i, getItem(i, j));
 
 			return res;
 		}
 
-		bool invertible() const
+		bool invertible()
 		{
-			return getRowCount() == getColCount() && calcDet() != 0;
+			return isSquare() && calcDet() != 0;
 		}
-		Matrix reverse() const
+		Matrix reverse()
 		{
 			if (!invertible())
 				RAISE(EMatrix, meInvertible);
@@ -276,7 +300,7 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				res(1, getRowCount());
 
-			for (register int i = 0; i < getRowCount(); i++)
+			for (int i = 0; i < getRowCount(); i++)
 				res.setItem(0, i, getItem(i, i));
 
 			return res;
@@ -288,10 +312,10 @@ namespace CIVIL::MATH::GA2D
 
 			Matrix
 				res(1, getRowCount());
-			register int
+			int
 				j = getRowCount() - 1;
 
-			for (register int i = 0; i < getRowCount(); i++)
+			for (int i = 0; i < getRowCount(); i++)
 			{
 				res.setItem(0, j, getItem(j, i));
 				j--;
@@ -303,12 +327,6 @@ namespace CIVIL::MATH::GA2D
 		Matrix &operator=(const Matrix &mat)
 		{
 #ifndef MATRIX_DYNAMIC
-			/*setRowCount(mat.getRowCount());
-			setColCount(mat.getColCount());
-
-			for (register int i = 0; i < mat.getRowCount(); i++)
-				for (register int j = 0; j < mat.getColCount(); j++)
-					setItem(i, j, mat.getItem(i, j));*/
 			m_intRowsCount = mat.m_intRowsCount;
 			m_intColsCount = mat.m_intColsCount;
 
@@ -328,8 +346,8 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				res(mat1.getRowCount(), mat1.getColCount());
 
-			for (register int i = 0; i < getRowCount(); i++)
-				for (register int j = 0; j < getColCount(); j++)
+			for (int i = 0; i < getRowCount(); i++)
+				for (int j = 0; j < getColCount(); j++)
 					res.setItem(i, j, mat1.getItem(i, j) + mat2.getItem(i, j));
 
 			return res;
@@ -339,8 +357,8 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				res(mat.getRowCount(), mat.getColCount());
 
-			for (register int i = 0; i < mat.getRowCount(); i++)
-				for (register int j = 0; j < mat.getColCount(); j++)
+			for (int i = 0; i < mat.getRowCount(); i++)
+				for (int j = 0; j < mat.getColCount(); j++)
 					res.setItem(i, j, mat.getItem(i, j) + value);
 
 			return res;
@@ -370,8 +388,8 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				res(mat1.getRowCount(), mat1.getColCount());
 
-			for (register int i = 0; i < res.getRowCount(); i++)
-				for (register int j = 0; j < res.getColCount(); j++)
+			for (int i = 0; i < res.getRowCount(); i++)
+				for (int j = 0; j < res.getColCount(); j++)
 					res.setItem(i, j, mat1.getItem(i, j) - mat2.getItem(i, j));
 
 			return res;
@@ -381,8 +399,8 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				res(mat.getRowCount(), mat.getColCount());
 
-			for (register int i = 0; i < res.getRowCount(); i++)
-				for (register int j = 0; j < res.getColCount(); j++)
+			for (int i = 0; i < res.getRowCount(); i++)
+				for (int j = 0; j < res.getColCount(); j++)
 					res.setItem(i, j, mat.getItem(i, j) - value);
 
 			return res;
@@ -409,13 +427,13 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				res(mat1.getRowCount(), mat2.getColCount());
 
-			for (register int i = 0; i < res.getRowCount(); i++)
-				for (register int j = 0; j < res.getColCount(); j++)
+			for (int i = 0; i < res.getRowCount(); i++)
+				for (int j = 0; j < res.getColCount(); j++)
 				{
 					_type
 						item = 0;
 
-					for (register int k = 0; k < mat1.getColCount(); k++)
+					for (int k = 0; k < mat1.getColCount(); k++)
 						item += mat1.getItem(i, k) * mat2.getItem(k, j);
 
 					res.setItem(i, j, item);
@@ -428,8 +446,8 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				res(mat.getRowCount(), mat.getColCount());
 
-			for (register int i = 0; i < mat.getRowCount(); i++)
-				for (register int j = 0; j < mat.getColCount(); j++)
+			for (int i = 0; i < mat.getRowCount(); i++)
+				for (int j = 0; j < mat.getColCount(); j++)
 					res.setItem(i, j, mat.getItem(i, j) * value);
 
 			return res;
@@ -460,8 +478,8 @@ namespace CIVIL::MATH::GA2D
 			Matrix
 				res(getRowCount(), getColCount());
 
-			for (register int i = 0; i < getRowCont(); i++)
-				for (register int j = 0; j < getColCount(); j++)
+			for (int i = 0; i < getRowCont(); i++)
+				for (int j = 0; j < getColCount(); j++)
 					res.setItem(i, j, mat.getItem(i, j) / value);
 
 			return res;
@@ -501,7 +519,7 @@ namespace CIVIL::MATH::GA2D
 			case 2:
 				return mat.getItem(0, 0) * mat.getItem(1, 1) - mat.getItem(1, 0) * mat.getItem(0, 1);
 			default:
-				for (register int i = 0; i < mat.getColCount(); i++)
+				for (int i = 0; i < mat.getColCount(); i++)
 				{
 					matTemp = mat;
 					matTemp.removeRow(0);
